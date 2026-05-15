@@ -115,7 +115,7 @@ three_finger_swipe() {
     sendevent "$dev" 3 54 $ry_start
     sendevent "$dev" 0 0 0
 
-    sleep 0.015
+    sleep 0.008
 
     # === 上划 (X 不变，只发 Y) ===
     for i in 1 2 3 4 5 6 7 8; do
@@ -127,7 +127,7 @@ three_finger_swipe() {
         sendevent "$dev" 3 47 2
         sendevent "$dev" 3 54 $y
         sendevent "$dev" 0 0 0
-        sleep 0.003
+        sleep 0.002
     done
 
     # === 释放三指 ===
