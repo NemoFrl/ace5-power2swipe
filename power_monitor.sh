@@ -105,7 +105,6 @@ three_finger_swipe() {
     sendevent "$dev" 3 58 5
     sendevent "$dev" 3 53 $rx2
     sendevent "$dev" 3 54 $ry_start
-    sendevent "$dev" 0 0 0
 
     sendevent "$dev" 3 47 2
     sendevent "$dev" 3 57 18
@@ -118,17 +117,14 @@ three_finger_swipe() {
 
     sleep 0.015
 
-    # === 上划 ===
+    # === 上划 (X 不变，只发 Y) ===
     for i in 1 2 3 4 5 6 7 8; do
         local y=$(( ry_start - dy * i ))
         sendevent "$dev" 3 47 0
-        sendevent "$dev" 3 53 $rx1
         sendevent "$dev" 3 54 $y
         sendevent "$dev" 3 47 1
-        sendevent "$dev" 3 53 $rx2
         sendevent "$dev" 3 54 $y
         sendevent "$dev" 3 47 2
-        sendevent "$dev" 3 53 $rx3
         sendevent "$dev" 3 54 $y
         sendevent "$dev" 0 0 0
         sleep 0.003
