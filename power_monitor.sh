@@ -4,8 +4,6 @@
 # Power2Swipe - 长按电源键触发三指上划
 # ============================================
 
-LONG_PRESS_MS=800
-
 log_msg() {
     echo "[Power2Swipe] $*"
     log -t Power2Swipe "$*" 2>/dev/null || true
@@ -22,12 +20,14 @@ three_finger_swipe() {
 # ---------- 工具函数 ----------
 
 cleanup() {
-    rm -f /data/local/tmp/power2swipe_fifo
+    kill $GETEVENT_PID 2>/dev/null
+    rm -f /data/local/tmp/power2swipe_fifo /data/local/tmp/power2swipe_pressed
     log_msg "Power2Swipe stopped"
     exit 0
 }
 
-trap cleanup EXIT TERM INT
+trap cleanup EXIT
+trap '' TERM INT
 
 # ---------- 主循环 ----------
 
@@ -40,34 +40,33 @@ mkfifo "$FIFO" || {
 
 getevent 2>/dev/null | grep --line-buffered ": 0001 0074 " > "$FIFO" &
 GETEVENT_PID=$!
-sleep 0.5
-
+sleep 0.3
 if ! kill -0 $GETEVENT_PID 2>/dev/null; then
     log_msg "ERROR: getevent/grep pipeline failed"
     exit 1
 fi
 
-log_msg "Power2Swipe monitoring started (PID: $$)"
+log_msg "Power2Swipe monitoring started"
 
-TIMER_PID=0
+PRESS_FLAG=/data/local/tmp/power2swipe_pressed
 
 while read -r line; do
     value="${line##* }"
     case "$value" in
         "00000001")
-            [ "$TIMER_PID" -ne 0 ] && kill $TIMER_PID 2>/dev/null
+            touch "$PRESS_FLAG"
             (
-                sleep 0.8
-                three_finger_swipe
+                sleep 1
+                if [ -f "$PRESS_FLAG" ]; then
+                    three_finger_swipe
+                fi
             ) &
-            TIMER_PID=$!
             ;;
         "00000000")
-            if [ "$TIMER_PID" -ne 0 ] && kill -0 $TIMER_PID 2>/dev/null; then
-                kill $TIMER_PID 2>/dev/null
+            if [ -f "$PRESS_FLAG" ]; then
+                rm -f "$PRESS_FLAG"
                 log_msg "Power key released before long press"
             fi
-            TIMER_PID=0
             ;;
     esac
 done < "$FIFO"
